@@ -1,0 +1,127 @@
+-- Snow Scripts GUI | Mobile + PC draggable
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "SnowScriptsGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.fromScale(0.25, 0.25)
+frame.Position = UDim2.fromScale(0.375, 0.375)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.ClipsDescendants = true
+frame.Name = "Main"
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 16)
+
+-- ===== DRAGGABLE (Mouse + Touch) =====
+local dragging = false
+local dragInput, inputPos, framePos
+
+local function update(input)
+	local delta = input.Position - inputPos
+	frame.Position = UDim2.new(
+		framePos.X.Scale,
+		framePos.X.Offset + delta.X,
+		framePos.Y.Scale,
+		framePos.Y.Offset + delta.Y
+	)
+end
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		inputPos = input.Position
+		framePos = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Parent = frame
+title.Size = UDim2.fromScale(1, 0.25)
+title.BackgroundTransparency = 1
+title.Text = "Snow Scripts"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255,255,255)
+
+-- RGB Effect
+task.spawn(function()
+	while true do
+		for i = 0, 360, 2 do
+			title.TextColor3 = Color3.fromHSV(i / 360, 1, 1)
+			task.wait(0.03)
+		end
+	end
+end)
+
+-- Leave Button
+local leave = Instance.new("TextButton")
+leave.Parent = frame
+leave.Size = UDim2.fromScale(0.6, 0.25)
+leave.Position = UDim2.fromScale(0.2, 0.6)
+leave.Text = "Leave"
+leave.Font = Enum.Font.GothamSemibold
+leave.TextScaled = true
+leave.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+leave.TextColor3 = Color3.fromRGB(255,255,255)
+leave.BorderSizePixel = 0
+Instance.new("UICorner", leave).CornerRadius = UDim.new(0, 12)
+leave.MouseButton1Click:Connect(function()
+	player:Kick("Snow Scripts - Goodbye ❄️")
+end)
+
+-- Snow Effect
+for i = 1, 35 do
+	local snow = Instance.new("Frame")
+	snow.Parent = frame
+	snow.Size = UDim2.fromOffset(math.random(2,4), math.random(2,4))
+	snow.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	snow.BackgroundTransparency = math.random(2,5)/10
+	snow.BorderSizePixel = 0
+	snow.Position = UDim2.fromScale(math.random(), math.random())
+	Instance.new("UICorner", snow).CornerRadius = UDim.new(1,0)
+
+	task.spawn(function()
+		while true do
+			snow.Position = UDim2.fromScale(math.random(), -0.1)
+			local tween = TweenService:Create(
+				snow,
+				TweenInfo.new(math.random(3,6), Enum.EasingStyle.Linear),
+				{Position = UDim2.fromScale(math.random(), 1.1)}
+			)
+			tween:Play()
+			tween.Completed:Wait()
+		end
+	end)
+end
